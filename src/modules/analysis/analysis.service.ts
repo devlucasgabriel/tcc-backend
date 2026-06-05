@@ -40,7 +40,7 @@ export class AnalysisService {
 				if (
 					compilerResponse.stderr.some(
 						(error) =>
-							error.text.includes('ignoring #pragma omp') &&
+							error.text.includes('ignoring #pragma omp') ||
 							error.text.includes('[-Wunknown-pragmas]')
 					)
 				) {
@@ -50,6 +50,7 @@ export class AnalysisService {
 						compatible: false
 					})
 				} else {
+					console.log(compilerResponse.stderr)
 					throw new BadRequestException('Erro durante a compilação do código')
 				}
 			} else {
@@ -64,7 +65,7 @@ export class AnalysisService {
 				})
 			}
 
-			await new Promise((resolve) => setTimeout(resolve, 1000))
+			await new Promise((resolve) => setTimeout(resolve, 200))
 		}
 
 		return results
@@ -78,7 +79,7 @@ export class AnalysisService {
 
 		const modifyGccVersions = gccVersions.map((compiler) => {
 			if (compiler.version[0] === '4') {
-				return `${compiler.version}.5`
+				return this.modifyGccVersions4x(compiler.version)
 			}
 			return `${compiler.version}.1`
 		})
@@ -125,5 +126,25 @@ export class AnalysisService {
 			function: func,
 			ocorrences: count
 		}))
+	}
+
+
+	private modifyGccVersions4x(version: string): string {
+		switch (version) {
+			case '4.4':
+				return '4.4.7'
+			case '4.5':
+				return '4.5.3'
+			case '4.6':
+				return '4.6.4'
+			case '4.7':
+				return '4.7.1'
+			case '4.8':
+				return '4.8.1'
+			case '4.9':
+				return '4.9.1'
+			default:
+				return version
+		}
 	}
 }
