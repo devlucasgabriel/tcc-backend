@@ -11,6 +11,7 @@ import { DirectiveEntity } from '@/shared/database/models/directive.entity'
 import { FunctionEntity } from '@/shared/database/models/function.entity'
 import { ImplementancionEntity } from '@/shared/database/models/implementencion.entity'
 import { OpenMPEntity } from '@/shared/database/models/openMP.entity'
+import { CronController } from './informations.controller'
 
 @Module({
 	imports: [
@@ -28,7 +29,7 @@ import { OpenMPEntity } from '@/shared/database/models/openMP.entity'
 		])
 	],
 	providers: [CronService],
-	controllers: [],
+	controllers: [CronController],
 	exports: [CronService]
 })
 export class CronModule {}

@@ -1,23 +1,95 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { GodboltClient } from './godbolt.client'
 import 'multer'
 import { InjectRepository } from '@nestjs/typeorm'
 import { CompilerEntity } from '@/shared/database/models/compiler.entity'
-import { Repository } from 'typeorm'
+import {Repository } from 'typeorm'
 import {
 	AsmCode,
 	CodeAnalysisResult,
 	GetGodBoltCompilerGccVersions,
 	GetGompCalls
 } from './analysis.types'
+import { DirectiveEntity } from '@/shared/database/models/directive.entity'
+import { DirectiveGompFunctionEntity } from '@/shared/database/models/directive-gomp-function.entity'
+import { FunctionEntity } from '@/shared/database/models/function.entity'
+import { GodboltClient } from './godbolt.client'
 
 @Injectable()
 export class AnalysisService {
 	constructor(
 		private readonly godBoltClient: GodboltClient,
 		@InjectRepository(CompilerEntity)
-		private readonly compilerRepository: Repository<CompilerEntity>
+		private readonly compilerRepository: Repository<CompilerEntity>,
+		@InjectRepository(DirectiveEntity)
+		private readonly directiveRepository: Repository<DirectiveEntity>,
+		@InjectRepository(DirectiveGompFunctionEntity)
+		private readonly directiveGompFunctionRepository: Repository<DirectiveGompFunctionEntity>,
+		@InjectRepository(FunctionEntity)
+		private readonly functionRepository: Repository<FunctionEntity>
 	) {}
+
+	async connectDiretiveToGompFunction(file: Express.Multer.File, directiveId: number): Promise<void> {
+		const godBoltCompilers = await this.getGodBoltCompilersIds()
+			
+		const code = file.buffer.toString('utf-8')
+				
+		const callsToGomp = new Set<string>()
+	
+		for (const compiler of godBoltCompilers) {
+			const compilerResponse = await this.godBoltClient.executeCode(
+				code,
+				compiler.compilerId
+			)
+	
+			if (compilerResponse.stderr.length > 0) {
+				continue
+			} 
+				
+			const gompCalls = this.getGompCallsFromCompilerResponse(
+				compilerResponse.asm
+			)
+
+			gompCalls.forEach((call) => callsToGomp.add(call.function))
+	
+			await new Promise((resolve) => setTimeout(resolve, 200))
+		}
+
+		const diretive = await this.directiveRepository.findOne({
+			where: {
+				id: directiveId
+			}
+		})
+
+		if (!diretive) {
+			throw new BadRequestException('Diretiva não encontrada')
+		}
+
+		for (const gompFunction of callsToGomp) {
+			const func = await this.functionRepository.findOne({
+				where: {
+					name: gompFunction
+				}
+			})
+
+			if (!func) {
+				continue
+			}
+
+			const existingRelation = await this.directiveGompFunctionRepository.findOne({
+				where: {
+					directiveId: diretive.id,
+					gompFunctionId: func.id
+				}
+			})
+
+			if (!existingRelation) {
+				await this.directiveGompFunctionRepository.save({
+					directiveId: diretive.id,
+					gompFunctionId: func.id
+				})
+			}
+		}		
+	}
 
 	async analysisCode(file: Express.Multer.File): Promise<CodeAnalysisResult[]> {
 		if (file.mimetype !== 'text/x-c') {
@@ -39,7 +111,7 @@ export class AnalysisService {
 			if (compilerResponse.stderr.length > 0) {
 				if (
 					compilerResponse.stderr.some(
-						(error) =>
+						(error: { text: string }) =>
 							error.text.includes('ignoring #pragma omp') ||
 							error.text.includes('[-Wunknown-pragmas]')
 					)

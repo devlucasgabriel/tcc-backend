@@ -5,7 +5,8 @@ import {
 	Post,
 	UploadedFile,
 	UseInterceptors,
-	BadRequestException
+	BadRequestException,
+	Body
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import * as path from 'path'
@@ -39,5 +40,30 @@ export class AnalysisController {
 			)
 		}
 		return this.analysisService.analysisCode(file)
+	}
+
+	@Post('gomp')
+	@HttpCode(HttpStatus.OK)
+	@UseInterceptors(
+		FileInterceptor('file', {
+			limits: { fileSize: 2 * 1024 * 1024 },
+			fileFilter: (_req, file, cb) => {
+				const allowedExts = ['.c']
+				const ext = path.extname(file.originalname).toLowerCase()
+				if (!allowedExts.includes(ext)) {
+					cb(null, false)
+				} else {
+					cb(null, true)
+				}
+			}
+		})
+	)
+	async analyzeGompFunctions(@UploadedFile() file: Express.Multer.File, @Body('directiveId') directiveId: number) {
+		if (!file) {
+			throw new BadRequestException(
+				'Arquivo inválido. Extensões permitidas: .c Tamanho máximo: 2MB'
+			)
+		}
+		return this.analysisService.connectDiretiveToGompFunction(file, directiveId)
 	}
 }

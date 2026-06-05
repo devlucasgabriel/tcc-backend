@@ -2,10 +2,8 @@ import { Inject, Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { GODBOLT_URL } from '@/shared/common/constants'
 import { firstValueFrom } from 'rxjs'
-import {
-	GodBoltCompilersResponse,
-	GodBoltExecuteCodeResponse
-} from './analysis.types'
+import { GodBoltExecuteCodeResponse, GodBoltCompilersResponse } from '@/modules/analysis/analysis.types'
+
 
 @Injectable()
 export class GodboltClient {

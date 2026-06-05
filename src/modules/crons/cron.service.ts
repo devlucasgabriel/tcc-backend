@@ -14,7 +14,6 @@ import { CompilerEntity } from '@/shared/database/models/compiler.entity'
 import { ImplementancionEntity } from '@/shared/database/models/implementencion.entity'
 import { CompilerFunctionEntity } from '@/shared/database/models/compiler-function.entity'
 import { CompilerImplementancionEntity } from '@/shared/database/models/compiler-implementancion.entity'
-import { DirectiveGompFunctionEntity } from '@/shared/database/models/directive-gomp-function.entity'
 import { DirectiveImplementancionEntity } from '@/shared/database/models/directive-implementancion.entity'
 import { DirectiveEntity } from '@/shared/database/models/directive.entity'
 import { FunctionEntity } from '@/shared/database/models/function.entity'
@@ -50,12 +49,10 @@ export class CronService {
 		private readonly directiveRepository: Repository<DirectiveEntity>,
 		@InjectRepository(DirectiveImplementancionEntity)
 		private readonly directiveImplementancionRepository: Repository<DirectiveImplementancionEntity>,
-		@InjectRepository(DirectiveGompFunctionEntity)
-		private readonly directiveGompFunctionRepository: Repository<DirectiveGompFunctionEntity>
 	) {}
 
 	@Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
-	private async getGccVersions() {
+	async getGccVersions() {
 		const regexBranch = /^releases\/gcc-\d+(?:\.\d+)*$/
 		const regexInicioGomp = /^GOMP_\d+(?:\.\d+)*\s\{$/
 		const regexFimBloco = /^\s*};|\}\s(OMP|GOMP)_\d+(?:\.\d+)*;$/
