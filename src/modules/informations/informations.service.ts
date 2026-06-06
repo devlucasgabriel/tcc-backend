@@ -27,7 +27,8 @@ export class InformationsService {
 			id: directive.id,
 			name: directive.name,
 			description: directive.description,
-			sintax: directive.sintax
+			sintax: directive.sintax,
+			functions: []
 		}
 	}
 

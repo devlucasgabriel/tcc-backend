@@ -18,7 +18,7 @@ export class InformationsController {
 		return this.informationsService.getDirectiveById(id)
 	}
 
-	@Get('directives/names')
+	@Get('directives')
 	@HttpCode(HttpStatus.OK)
 	async getDirectivesNames() {
 		return this.informationsService.getUniqueDirectiveNames()

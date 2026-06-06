@@ -49,7 +49,7 @@ export class AnalysisService {
 				compilerResponse.asm
 			)
 
-			gompCalls.forEach((call) => callsToGomp.add(call.function))
+			gompCalls.forEach((call) => callsToGomp.add(call.gompFunction))
 	
 			await new Promise((resolve) => setTimeout(resolve, 200))
 		}
@@ -92,7 +92,8 @@ export class AnalysisService {
 	}
 
 	async analysisCode(file: Express.Multer.File): Promise<CodeAnalysisResult[]> {
-		if (file.mimetype !== 'text/x-c') {
+		if (!['text/x-c', 'text/x-csrc'].includes(file.mimetype)) {
+			console.log(file.mimetype)
 			throw new BadRequestException('Tipo de arquivo inválido')
 		}
 
@@ -195,7 +196,7 @@ export class AnalysisService {
 		})
 
 		return Array.from(gompCallCounts, ([func, count]) => ({
-			function: func,
+			gompFunction: func,
 			ocorrences: count
 		}))
 	}

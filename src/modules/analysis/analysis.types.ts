@@ -18,7 +18,7 @@ export type GodBoltCompilersResponse = {
 }
 
 export type GetGompCalls = {
-	function: string
+	gompFunction: string
 	ocorrences: number
 }
 
