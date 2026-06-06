@@ -10,7 +10,7 @@ import {
 } from 'typeorm'
 import { ImplementancionEntity } from './implementencion.entity'
 import { CompilerFunctionEntity } from './compiler-function.entity'
-import { DirectiveGompFunctionEntity } from './directive-gomp-function.entity'
+import { DirectiveFunctionEntity } from './directive-function.entity'
 
 @Entity('function')
 @Unique(['name', 'implementicionId'])
@@ -38,8 +38,8 @@ export class FunctionEntity extends DefaultEntity<FunctionEntity> {
 	compilerFunctions: CompilerFunctionEntity[]
 
 	@OneToMany(
-		() => DirectiveGompFunctionEntity,
-		(directiveGompFunction) => directiveGompFunction.gompFunctions
+		() => DirectiveFunctionEntity,
+		(directiveFunction) => directiveFunction.gompFunctions
 	)
-	directiviesGompFunctions: DirectiveGompFunctionEntity[]
+	directiviesFunctions: DirectiveFunctionEntity[]
 }

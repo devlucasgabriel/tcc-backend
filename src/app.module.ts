@@ -15,12 +15,12 @@ import { ImplementancionEntity } from './shared/database/models/implementencion.
 import { FunctionEntity } from './shared/database/models/function.entity'
 import { CompilerImplementancionEntity } from './shared/database/models/compiler-implementancion.entity'
 import { CompilerFunctionEntity } from './shared/database/models/compiler-function.entity'
-import { DirectiveImplementancionEntity } from './shared/database/models/directive-implementancion.entity'
 import { DirectiveEntity } from './shared/database/models/directive.entity'
 import { OpenMPEntity } from './shared/database/models/openMP.entity'
-import { DirectiveGompFunctionEntity } from './shared/database/models/directive-gomp-function.entity'
 import { CronModule } from './modules/crons/cron.module'
 import { InformationsModule } from './modules/informations/informations.module'
+import { DirectiveFunctionEntity } from './shared/database/models/directive-function.entity'
+import { DirectiveOpenMpEntity } from './shared/database/models/diretive-open_mp.entity'
 @Module({
 	imports: [
 		AnalysisModule,
@@ -51,10 +51,10 @@ import { InformationsModule } from './modules/informations/informations.module'
 			FunctionEntity,
 			CompilerImplementancionEntity,
 			CompilerFunctionEntity,
-			DirectiveImplementancionEntity,
+			DirectiveFunctionEntity,
 			DirectiveEntity,
 			OpenMPEntity,
-			DirectiveGompFunctionEntity
+			DirectiveOpenMpEntity
 		])
 	],
 	controllers: [],

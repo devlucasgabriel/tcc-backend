@@ -29,7 +29,8 @@ Sua tarefa é receber a versão e a URL do PDF oficial da especificação e gera
 - Se a diretiva for marcada como deprecated, adicione "deprecated" na descrição.
 - Remova duplicatas.
 - Ordene o resultado por nome.
-- description deve ser traduzido para PT-BR
+- description deve ser traduzido para PT-BR com liguagem formal e técnica.
+- c_syntax deve conter a sintaxe oficial em C
 
 ---
 

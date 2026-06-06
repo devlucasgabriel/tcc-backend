@@ -7,7 +7,6 @@ import {
 	Unique
 } from 'typeorm'
 import { FunctionEntity } from './function.entity'
-import { DirectiveImplementancionEntity } from './directive-implementancion.entity'
 import { CompilerImplementancionEntity } from './compiler-implementancion.entity'
 
 @Entity('implementancion')
@@ -24,12 +23,6 @@ export class ImplementancionEntity extends DefaultEntity<ImplementancionEntity> 
 
 	@OneToMany(() => FunctionEntity, (func) => func.implementancion)
 	functions: FunctionEntity[]
-
-	@OneToMany(
-		() => DirectiveImplementancionEntity,
-		(directiveImplementancion) => directiveImplementancion.directive
-	)
-	directiviesImplementancions: DirectiveImplementancionEntity[]
 
 	@OneToMany(
 		() => CompilerImplementancionEntity,

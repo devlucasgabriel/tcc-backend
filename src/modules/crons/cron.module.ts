@@ -5,13 +5,13 @@ import { CronService } from './cron.service'
 import { CompilerFunctionEntity } from '@/shared/database/models/compiler-function.entity'
 import { CompilerImplementancionEntity } from '@/shared/database/models/compiler-implementancion.entity'
 import { CompilerEntity } from '@/shared/database/models/compiler.entity'
-import { DirectiveGompFunctionEntity } from '@/shared/database/models/directive-gomp-function.entity'
-import { DirectiveImplementancionEntity } from '@/shared/database/models/directive-implementancion.entity'
 import { DirectiveEntity } from '@/shared/database/models/directive.entity'
 import { FunctionEntity } from '@/shared/database/models/function.entity'
 import { ImplementancionEntity } from '@/shared/database/models/implementencion.entity'
 import { OpenMPEntity } from '@/shared/database/models/openMP.entity'
-import { CronController } from './informations.controller'
+import { CronController } from './cron.controller'
+import { DirectiveFunctionEntity } from '@/shared/database/models/directive-function.entity'
+import { DirectiveOpenMpEntity } from '@/shared/database/models/diretive-open_mp.entity'
 
 @Module({
 	imports: [
@@ -24,8 +24,8 @@ import { CronController } from './informations.controller'
 			CompilerFunctionEntity,
 			OpenMPEntity,
 			DirectiveEntity,
-			DirectiveImplementancionEntity,
-			DirectiveGompFunctionEntity
+			DirectiveFunctionEntity,
+			DirectiveOpenMpEntity,
 		])
 	],
 	providers: [CronService],

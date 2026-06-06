@@ -10,9 +10,9 @@ import {
 	GetGompCalls
 } from './analysis.types'
 import { DirectiveEntity } from '@/shared/database/models/directive.entity'
-import { DirectiveGompFunctionEntity } from '@/shared/database/models/directive-gomp-function.entity'
 import { FunctionEntity } from '@/shared/database/models/function.entity'
 import { GodboltClient } from './godbolt.client'
+import { DirectiveFunctionEntity } from '@/shared/database/models/directive-function.entity'
 
 @Injectable()
 export class AnalysisService {
@@ -22,8 +22,8 @@ export class AnalysisService {
 		private readonly compilerRepository: Repository<CompilerEntity>,
 		@InjectRepository(DirectiveEntity)
 		private readonly directiveRepository: Repository<DirectiveEntity>,
-		@InjectRepository(DirectiveGompFunctionEntity)
-		private readonly directiveGompFunctionRepository: Repository<DirectiveGompFunctionEntity>,
+		@InjectRepository(DirectiveFunctionEntity)
+		private readonly directiveFunctionRepository: Repository<DirectiveFunctionEntity>,
 		@InjectRepository(FunctionEntity)
 		private readonly functionRepository: Repository<FunctionEntity>
 	) {}
@@ -75,17 +75,17 @@ export class AnalysisService {
 				continue
 			}
 
-			const existingRelation = await this.directiveGompFunctionRepository.findOne({
+			const existingRelation = await this.directiveFunctionRepository.findOne({
 				where: {
 					directiveId: diretive.id,
-					gompFunctionId: func.id
+					functionId: func.id
 				}
 			})
 
 			if (!existingRelation) {
-				await this.directiveGompFunctionRepository.save({
+				await this.directiveFunctionRepository.save({
 					directiveId: diretive.id,
-					gompFunctionId: func.id
+					functionId: func.id
 				})
 			}
 		}		

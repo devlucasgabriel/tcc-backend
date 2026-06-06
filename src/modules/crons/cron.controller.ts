@@ -2,9 +2,6 @@ import {
 	Controller,
 	HttpCode,
 	HttpStatus,
-	Get,
-	Param,
-	ParseIntPipe,
 	Post
 } from '@nestjs/common'
 import { CronService } from './cron.service'

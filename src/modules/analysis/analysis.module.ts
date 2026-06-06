@@ -10,7 +10,7 @@ import { ImplementancionEntity } from '@/shared/database/models/implementencion.
 import { HttpModule } from '@nestjs/axios'
 import { GodboltClient } from './godbolt.client'
 import { DirectiveEntity } from '@/shared/database/models/directive.entity'
-import { DirectiveGompFunctionEntity } from '@/shared/database/models/directive-gomp-function.entity'
+import { DirectiveFunctionEntity } from '@/shared/database/models/directive-function.entity'
 @Module({
 	imports: [
 		HttpModule,
@@ -18,7 +18,7 @@ import { DirectiveGompFunctionEntity } from '@/shared/database/models/directive-
 			CompilerEntity,
 			ImplementancionEntity,
 			DirectiveEntity,
-			DirectiveGompFunctionEntity,
+			DirectiveFunctionEntity,
 			FunctionEntity,
 			CompilerImplementancionEntity,
 			CompilerFunctionEntity

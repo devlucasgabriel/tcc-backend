@@ -16,3 +16,8 @@ export const GODBOLT_URL: string = env(
 	'GODBOLT_URL',
 	'https://godbolt.org/api/'
 )
+
+export const GCC_GITHUB_URL: string = env(
+	'GCC_GITHUB_URL',
+	'https://raw.githubusercontent.com/gcc-mirror/gcc/releases/'
+)

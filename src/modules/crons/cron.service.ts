@@ -14,10 +14,11 @@ import { CompilerEntity } from '@/shared/database/models/compiler.entity'
 import { ImplementancionEntity } from '@/shared/database/models/implementencion.entity'
 import { CompilerFunctionEntity } from '@/shared/database/models/compiler-function.entity'
 import { CompilerImplementancionEntity } from '@/shared/database/models/compiler-implementancion.entity'
-import { DirectiveImplementancionEntity } from '@/shared/database/models/directive-implementancion.entity'
 import { DirectiveEntity } from '@/shared/database/models/directive.entity'
+import { DirectiveOpenMpEntity } from '@/shared/database/models/diretive-open_mp.entity'
 import { FunctionEntity } from '@/shared/database/models/function.entity'
 import { OpenMPEntity } from '@/shared/database/models/openMP.entity'
+import { GCC_GITHUB_URL } from '@/shared/common/constants'
 
 interface CompilerData {
 	com_nome: string
@@ -47,8 +48,8 @@ export class CronService {
 		private readonly openMPRepository: Repository<OpenMPEntity>,
 		@InjectRepository(DirectiveEntity)
 		private readonly directiveRepository: Repository<DirectiveEntity>,
-		@InjectRepository(DirectiveImplementancionEntity)
-		private readonly directiveImplementancionRepository: Repository<DirectiveImplementancionEntity>,
+		@InjectRepository(DirectiveOpenMpEntity)
+		private readonly directiveOpenMpRepository: Repository<DirectiveOpenMpEntity>
 	) {}
 
 	@Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
@@ -85,7 +86,7 @@ export class CronService {
 			console.log(`\nProcessando ${subString}...`)
 
 			try {
-				const url = `https://raw.githubusercontent.com/gcc-mirror/gcc/releases/${subString}/libgomp/libgomp.map`
+				const url = `${GCC_GITHUB_URL}${subString}/libgomp/libgomp.map`
 				const response = await fetch(url)
 
 				if (!response.ok) {
@@ -317,7 +318,6 @@ export class CronService {
 
 	private async getDirectives() {
 		const versions = await this.openMPRepository.find()
-		const directivesImplementancion: { id: number; gompFunction: string }[] = []
 
 		for (const version of versions) {
 			const response = await this.geminiService.runAgent(
@@ -335,39 +335,36 @@ export class CronService {
 					GOMP_function: string
 				}[]
 			}
-			console.log(directives)
-			for (const directive of directives.directives) {
-				const directiveExists = await this.directiveRepository.findOne({
+
+			for (const directiveData of directives.directives) {
+				let directive = await this.directiveRepository.findOne({
 					where: {
-						name: directive.name,
-						openMPId: version.id
+						name: directiveData.name
 					}
 				})
 
-				if (directiveExists) {
-					continue
-				}
-
-				const createdDirective = await this.directiveRepository.save({
-					name: directive.name,
-					description: directive.description,
-					sintax: directive.c_syntax,
-					openMPId: version.id
-				})
-
-				const implementancion = await this.implementancionRepository.findOne({
-					where: {
-						name: 'OMP',
-						version: version.version
-					}
-				})
-
-				if (implementancion) {
-					await this.directiveImplementancionRepository.save({
-						directiveId: createdDirective.id,
-						implementancionId: implementancion.id
+				if (!directive) {
+					directive = await this.directiveRepository.save({
+						name: directiveData.name,
+						description: directiveData.description,
+						sintax: directiveData.c_syntax
 					})
 				}
+
+				const existingRelation = await this.directiveOpenMpRepository.findOne({
+					where: {
+						directiveId: directive.id,
+						openMpId: version.id
+					}
+				})
+
+				if (!existingRelation) {
+					await this.directiveOpenMpRepository.save({
+						directiveId: directive.id,
+						openMpId: version.id
+					})
+				}
+				console.log(directive)
 			}
 
 			await new Promise((resolve) => setTimeout(resolve, 10000))

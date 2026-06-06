@@ -15,7 +15,8 @@ export class GeminiService {
 
 			return response.text
 		} catch (err) {
-			throw new InternalServerErrorException(err)
+			console.log(err)
+			return undefined
 		}
 	}
 }
