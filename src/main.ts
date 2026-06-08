@@ -8,7 +8,12 @@ async function bootstrap() {
 
 	app.use(helmet())
 
-	app.enableCors()
+	app.enableCors({
+		origin: [
+			'https://tcc-frontend-hazel.vercel.app'
+		],
+		allowedHeaders: ['Content-Type', 'Authorization']
+	})
 	await app.listen(HTTP_PORT)
 
 	console.log('-------------------------------------------------------------')
