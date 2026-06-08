@@ -29,7 +29,7 @@ export class InformationsService {
 			name: directive.name,
 			description: directive.description,
 			sintax: directive.sintax,
-			functions: directive.directiviesFunctions.map((directiveFunctions) => directiveFunctions.gompFunctions.name)
+			gompFunctions: directive.directiviesFunctions.map((directiveFunctions) => directiveFunctions.gompFunctions.name)
 		}
 	}
 
