@@ -16,7 +16,8 @@ export class InformationsService {
 
 	async getDirectiveById(id: number) {
 		const directive = await this.directiveRepository.findOne({
-			where: { id }
+			where: { id },
+			relations: ['directiviesFunctions', 'directiviesFunctions.gompFunctions']
 		})
 
 		if (!directive) {
@@ -28,7 +29,7 @@ export class InformationsService {
 			name: directive.name,
 			description: directive.description,
 			sintax: directive.sintax,
-			functions: []
+			functions: directive.directiviesFunctions.map((directiveFunctions) => directiveFunctions.gompFunctions.name)
 		}
 	}
 

@@ -40,7 +40,7 @@ export class AnalysisService {
 				code,
 				compiler.compilerId
 			)
-	
+
 			if (compilerResponse.stderr.length > 0) {
 				continue
 			} 
