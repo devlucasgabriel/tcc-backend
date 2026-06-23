@@ -14,26 +14,50 @@ export class GodboltClient {
 
 	async executeCode(
 		code: string,
-		compiler: string
+		compiler: string,
+		language: string
 	): Promise<GodBoltExecuteCodeResponse> {
-		const url = `${GODBOLT_URL}compiler/${compiler}/compile`
+		const correctCompiler = language === 'c++' ? compiler.replace('c','') : compiler
+		const url = `${GODBOLT_URL}compiler/${correctCompiler}/compile`
 
 		const response = await firstValueFrom(
 			this.httpService.post(url, {
 				source: code,
-				lang: 'C',
+				lang: language,
+				compiler: correctCompiler,
 				allowStoreCodeDebug: true,
 				options: {
 					userArguments: '-fopenmp -Wunknown-pragmas',
+					tools: [],
+					libraries: [],
+					executeOptions: {
+						args: [],
+						stdin: ''
+					},
+					compilerOptions: {
+						overrides: [],
+						produceCfg: false,
+						produceClangir: null,
+						produceDevice: false,
+						produceGccDump:	{},
+						produceIr: null,
+						produceLeanC: null,
+						produceOptInfo: false,
+						produceOptPipeline: null,
+						producePp: null,
+						produceYul: null
+					},
 					filters: {
 						binary: false,
+						binaryObject: false,
 						commentOnly: true,
+						debugCalls: false,
 						demangle: true,
 						directives: true,
 						execute: false,
 						intel: true,
 						labels: true,
-						libraryCode: false,
+						libraryCode: true,
 						trim: false
 					}
 				}

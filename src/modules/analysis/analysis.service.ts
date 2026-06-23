@@ -6,6 +6,7 @@ import {Repository } from 'typeorm'
 import {
 	AsmCode,
 	CodeAnalysisResult,
+	CodeAnalysisResults,
 	GetGodBoltCompilerGccVersions,
 	GetGompCalls
 } from './analysis.types'
@@ -38,7 +39,8 @@ export class AnalysisService {
 		for (const compiler of godBoltCompilers) {
 			const compilerResponse = await this.godBoltClient.executeCode(
 				code,
-				compiler.compilerId
+				compiler.compilerId,
+				file.originalname.split('.')[1] === 'c' ? 'c' : 'c++'
 			)
 
 			if (compilerResponse.stderr.length > 0) {
@@ -91,57 +93,95 @@ export class AnalysisService {
 		}		
 	}
 
-	async analysisCode(file: Express.Multer.File): Promise<CodeAnalysisResult[]> {
-		if (!['text/x-c', 'text/x-csrc'].includes(file.mimetype)) {
-			console.log(file.mimetype)
+	async analysisCode(files: Express.Multer.File[]): Promise<CodeAnalysisResults[]> {
+		const regex = /#include\s+[<"]([^>"]+)[>"]/g;
+		const response: CodeAnalysisResults[] = []
+		const cFiles = files.filter((file) => ['text/x-c', 'text/x-csrc', 'text/x-c++src', 'text/x-c++', 'text/x-cpp'].includes(file.mimetype))
+		if (cFiles.length === 0) {
 			throw new BadRequestException('Tipo de arquivo inválido')
 		}
+		for (const file of cFiles) {
+			
+			const godBoltCompilers = await this.getGodBoltCompilersIds()
+			
+			let code = file.buffer.toString('utf-8')
+			
+			const matches = [...code.matchAll(regex)]
+			const includesNames = matches.map((match) => match[1])
+			const hFiles = files.filter((sendedFile) => includesNames.includes(sendedFile.originalname))
 
-		const godBoltCompilers = await this.getGodBoltCompilersIds()
+			hFiles.forEach((hFile) => {
+				const hFileContent = hFile.buffer.toString('utf-8')
+				code = code.replace(`#include <${hFile.originalname}>`, `\n${hFileContent}\n`)
+				code = code.replace(`#include "${hFile.originalname}"`, `\n${hFileContent}\n`)
+			})
 
-		const code = file.buffer.toString('utf-8')
+			const results: CodeAnalysisResult[] = []
 
-		const results: CodeAnalysisResult[] = []
-
-		for (const compiler of godBoltCompilers) {
-			const compilerResponse = await this.godBoltClient.executeCode(
-				code,
-				compiler.compilerId
-			)
-
-			if (compilerResponse.stderr.length > 0) {
-				if (
-					compilerResponse.stderr.some(
-						(error: { text: string }) =>
-							error.text.includes('ignoring #pragma omp') ||
-							error.text.includes('[-Wunknown-pragmas]')
-					)
-				) {
-					results.push({
-						gccVersion: compiler.gccVersion,
-						calls: [],
-						compatible: false
-					})
-				} else {
-					console.log(compilerResponse.stderr)
-					throw new BadRequestException('Erro durante a compilação do código')
-				}
-			} else {
-				const gompCalls = this.getGompCallsFromCompilerResponse(
-					compilerResponse.asm
+			for (const compiler of godBoltCompilers) {
+				const compilerResponse = await this.godBoltClient.executeCode(
+					code,
+					compiler.compilerId,
+					file.originalname.split('.')[1] === 'c' ? 'c' : 'c++'
 				)
 
-				results.push({
-					gccVersion: compiler.gccVersion,
-					calls: gompCalls,
-					compatible: true
-				})
+				if (compilerResponse.stderr.length > 0) {
+					if (
+						compilerResponse.stderr.some(
+							(error: { text: string }) =>
+								error.text.includes('ignoring #pragma omp') ||
+								error.text.includes('[-Wunknown-pragmas]') ||
+								(error.text.includes('ignoring') && error.text.includes('#pragma omp'))
+						)
+					) {
+						results.push({
+							gccVersion: compiler.gccVersion,
+							calls: [],
+							compatible: false
+						})
+					} else if (compilerResponse.stderr.some(
+							(error: { text: string }) =>
+								(error.text.includes('ignoring') && error.text.includes('#pragma scop')) ||
+								(error.text.includes('ignoring') && error.text.includes('#pragma endscop'))
+						)) {
+							const gompCalls = this.getGompCallsFromCompilerResponse(
+						compilerResponse.asm
+					)
+							results.push({
+							gccVersion: compiler.gccVersion,
+							calls: gompCalls,
+							compatible: true
+						})
+						}
+					
+					else {
+						console.log(compilerResponse.stderr)
+						continue
+					}
+				} else {
+					const gompCalls = this.getGompCallsFromCompilerResponse(
+						compilerResponse.asm
+					)
+
+					results.push({
+						gccVersion: compiler.gccVersion,
+						calls: gompCalls,
+						compatible: true
+					})
+				}
+
+				await new Promise((resolve) => setTimeout(resolve, 200))
 			}
 
-			await new Promise((resolve) => setTimeout(resolve, 200))
-		}
+			if (results.length > 0) {
 
-		return results
+			response.push({
+				fileName: file.originalname,
+				results
+			})
+		}
+		}
+		return response
 	}
 
 	private async getGodBoltCompilersIds(): Promise<

@@ -32,3 +32,13 @@ export type CodeAnalysisResult = {
 	calls: GetGompCalls[]
 	compatible: boolean
 }
+
+export type CodeAnalysisResults = {
+	fileName: string
+	results: CodeAnalysisResult[]
+}
+
+export type GodBoltFiles = {
+	filename: string
+	contents: string
+}

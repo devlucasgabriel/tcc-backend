@@ -3,12 +3,12 @@ import {
 	HttpCode,
 	HttpStatus,
 	Post,
-	UploadedFile,
+	UploadedFiles,
 	UseInterceptors,
 	BadRequestException,
 	Body
 } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import * as path from 'path'
 import { AnalysisService } from './analysis.service'
 import { Express } from 'express'
@@ -20,10 +20,10 @@ export class AnalysisController {
 	@Post('analyze')
 	@HttpCode(HttpStatus.OK)
 	@UseInterceptors(
-		FileInterceptor('file', {
+		FilesInterceptor('files', 12, {
 			limits: { fileSize: 2 * 1024 * 1024 },
 			fileFilter: (_req, file, cb) => {
-				const allowedExts = ['.c']
+				const allowedExts = ['.c', '.h', '.cpp']
 				const ext = path.extname(file.originalname).toLowerCase()
 				if (!allowedExts.includes(ext)) {
 					cb(null, false)
@@ -33,19 +33,20 @@ export class AnalysisController {
 			}
 		})
 	)
-	async analyzeOpenMPSource(@UploadedFile() file: Express.Multer.File) {
-		if (!file) {
+	async analyzeOpenMPSource(@UploadedFiles() files: Express.Multer.File[]) {
+		if (!files || files.length === 0) {
 			throw new BadRequestException(
-				'Arquivo inválido. Extensões permitidas: .c Tamanho máximo: 2MB'
+				'Arquivo inválido. Extensões permitidas: .c, .h - Tamanho máximo: 2MB'
 			)
 		}
-		return this.analysisService.analysisCode(file)
+
+		return this.analysisService.analysisCode(files)
 	}
 
 	@Post('gomp')
 	@HttpCode(HttpStatus.OK)
 	@UseInterceptors(
-		FileInterceptor('file', {
+		FilesInterceptor('file', 3, {
 			limits: { fileSize: 2 * 1024 * 1024 },
 			fileFilter: (_req, file, cb) => {
 				const allowedExts = ['.c']
@@ -58,12 +59,20 @@ export class AnalysisController {
 			}
 		})
 	)
-	async analyzeGompFunctions(@UploadedFile() file: Express.Multer.File, @Body('directiveId') directiveId: number) {
-		if (!file) {
+	async analyzeGompFunctions(
+		@UploadedFiles() files: Express.Multer.File[],
+		@Body('directiveId') directiveId: number
+	) {
+		if (!files || files.length === 0) {
 			throw new BadRequestException(
 				'Arquivo inválido. Extensões permitidas: .c Tamanho máximo: 2MB'
 			)
 		}
-		return this.analysisService.connectDiretiveToGompFunction(file, directiveId)
+
+		return Promise.all(
+			files.map((file) =>
+				this.analysisService.connectDiretiveToGompFunction(file, directiveId)
+			)
+		)
 	}
 }
